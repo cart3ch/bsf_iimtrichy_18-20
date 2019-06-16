@@ -6,8 +6,8 @@
 #######################################################################################
 
 ### Seting up the correct directory
-#setwd("~/PGP-iimt/Term4/BSF gr2/bsf_iimtrichy_18-20/BSF G2T08/Assignment1/") #Windows
-#setwd("~/rwork/rprojects/bsf_iimtrichy_18-20/BSF G2T08/Assignment1/") #Linux
+#setwd("~/PGP-iimt/Term4/BSF gr2/bsf_iimtrichy_18-20/BSF G2T10/Assignment1/") #Windows
+#setwd("~/rwork/rprojects/bsf_iimtrichy_18-20/BSF G2T10/Assignment1/") #Linux
 
 ### Reading Excel file
 library(readxl)
