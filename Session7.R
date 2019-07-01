@@ -8,6 +8,8 @@ anova(sud_model)
 
 ## In-class Session
 ## Multiple Linear Regression
+library(readxl)
+house<-read_excel("BSF G2T10/Assignment1/Housing.xlsx")
 m3_house <- lm(price ~ lotsize+ bedrooms+ prefarea + stories, data=house)
 summary(m3_house)
 
@@ -24,3 +26,4 @@ ncvTest(m3_house)
 influencePlot(m3_house)
 
 vif(m3_house)
+  
