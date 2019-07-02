@@ -1,0 +1,57 @@
+---
+title: "Machine_Breakdowns"
+author: "BSF"
+date: "7/1/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+mdat <- read.csv("Machine_Breakdowns.csv")
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## About dataset
+
+```{r}
+head(mdat)
+str(mdat)
+table(mdat$Machine)
+```
+
+## Regression with dummy variables
+
+```{r}
+mdat$dummy_lathe <- ifelse(mdat$Machine=="lathe",1,0)
+mdat$dummy_stampping <- ifelse(mdat$Machine=="stampping machine",1,0)
+mdat$dummy_welding <- ifelse(mdat$Machine=="welding machine",1,0)
+
+m1 <- lm(data=mdat,Cost.of.Repairs ~ Age.of.machine + dummy_stampping + dummy_welding  )
+
+summary(m1)
+```
+
+## Regression with Factor Variable
+
+```{r}
+m2 <- lm(data=mdat,Cost.of.Repairs ~ Age.of.machine + Machine)
+
+summary(m2)
+```
+
+**m1 and m2 are identical**
+
+## Regression with Relevel
+
+```{r}
+mdat$Machine <- relevel(mdat$Machine,ref = "stampping machine")
+m3 <- lm(data=mdat,Cost.of.Repairs ~ Age.of.machine + Machine)
+
+summary(m3)
+
+mdat$Machine <- relevel(mdat$Machine,ref = "welding machine")
+m4 <- lm(data=mdat,Cost.of.Repairs ~ Age.of.machine + Machine)
+
+summary(m4)
+
+```
+

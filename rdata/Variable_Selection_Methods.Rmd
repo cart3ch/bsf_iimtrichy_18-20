@@ -1,0 +1,108 @@
+---
+title: "Variable Selection Methods"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+house <- read_excel("Housing.xlsx")
+```
+
+# Introduction
+Here is the structure of house dataset
+```{r, }
+str(house)
+```
+
+
+# Variable Selection Methods
+
+**Occam's razor** : All else being equal,the simplest explanation is the best one
+
+Let k is the number of variables in the model and p=k+1 be the total number of parameters.
+
+Best fit of regression model is trade of between explanation and parameters. The criteria for best fits
+
+- Adjusted $R^2$: $1 - \frac{(1-R^2)(n-1)}{n-p}$
+- AIC (Akaike's An Information Criterion) :  $2p +n(1+\ln(2\pi))+n\ln(SSE/n)$ (some software use this formula  $2p +n\ln(SSE/n)$ )
+- BIC (Bayesian information criterion): $\ln(n)*p +n*(1+\ln(2*\pi))+n*\ln(SSE/n)$ 
+- Mallows's Cp :  $\frac{SSE_p}{MSE_{fullmodel}} +2p-n$
+
+```{r}
+## Examples
+m1 <- lm(data=house,log(price)~ log(lotsize))
+AIC(m1) ## 250.7114
+BIC(m1) ## 263.6193
+
+```
+
+
+## Choose a model by AIC in a Stepwise Algorithm 
+### Forward Selection
+
+
+
+```{r}
+#Constant Model
+
+house$logprice <- log(house$price)
+house$loglotsize <- log(house$lotsize)
+
+const_m <- lm(data=house, logprice~1)
+
+#formula(lm(data=house, logprice~.))
+full_model_eqn <- "logprice ~ loglotsize + bedrooms + bathrms + stories + driveway + 
+    recroom + fullbase + gashw + airco + garagepl + prefarea "
+full_m <- lm(data=house, full_model_eqn)
+
+step(const_m, scope=list(lower=const_m, upper=full_m), direction="forward")
+
+# lm(formula = price ~ loglotsize + bathrms + airco + prefarea + 
+#     stories + garagepl + fullbase + gashw + driveway + recroom + 
+#     bedrooms, data = house)
+
+```
+
+### Backward Selection
+
+
+```{r}
+
+step(full_m, direction="backward")
+
+
+# lm(formula = logprice ~ loglotsize + bedrooms + bathrms + stories + 
+#     driveway + recroom + fullbase + gashw + airco + garagepl + 
+#     prefarea, data = house)
+
+```
+### Stepwise Selection
+
+
+```{r}
+
+step(const_m, scope=list(upper=full_m), direction="both")
+
+# lm(formula = price ~ loglotsize + bathrms + airco + prefarea + 
+#     stories + garagepl + fullbase + gashw + driveway + recroom + 
+#     bedrooms, data = house)
+
+```
+
+
+## Best subset regression
+
+This would require *leaps* package.
+
+```{r}
+library(leaps)
+## This model is just an example; you could use 'price~.'
+leaps=regsubsets(data=house,  logprice ~ loglotsize + bathrms + airco + stories + prefarea +  driveway, nbest=1)
+
+plot(leaps,scale="adjr2")
+
+```
+

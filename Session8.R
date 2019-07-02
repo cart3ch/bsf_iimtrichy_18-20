@@ -1,10 +1,11 @@
 ## Pre-class assignment
-data<-read.csv("Machine_Breakdowns.csv")
+data<-read.csv("rdata/Machine_Breakdowns.csv")
 model<-lm(data$Cost.of.Repairs ~  data$Age.of.machine + data$Machine, data = data)
 # model with interaction effects
 model<-lm(data$Cost.of.Repairs ~  data$Age.of.machine + data$Age.of.machine:data$Machine, data = data)
 summary(model)
            
+
 #One-way anova test
 means.data<-data.frame(age=data$Age.of.machine, machine=data$Machine)
 library(dplyr)
@@ -24,3 +25,6 @@ ggboxplot(means.data, x = "machine", y = "age",
 res.aov <- aov(age ~ machine, data = means.data)
 summary(res.aov)
 #since P-value is low, reject the null hypothesis of equal means
+
+
+#### Class Session
