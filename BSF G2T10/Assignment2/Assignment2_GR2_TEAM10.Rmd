@@ -1,0 +1,157 @@
+---
+title: "Assignment2_GR2_TEAM10"
+author: "Group 2 - TEAM10"
+date: "15/07/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Data Cleaning
+
+The categorical variables such as age is coded as a number and hence when we read it using R, they are coded as numeric variables. As a first step we need to convert all the relevant categorical variables as factors in R.
+
+```{r}
+library("readxl")
+ipl.data <- read_xlsx("IMB381IPL2013.xlsx",sheet = 3)
+ipl.data$AGE<-factor(ipl.data$AGE)
+levels(ipl.data$AGE)<-c(" -less than 25 yrs", " -between 25-35 yrs", " -more Than 35 yrs")
+ipl.data$COUNTRY<-factor(ipl.data$COUNTRY)
+ipl.data$TEAM<-factor(ipl.data$TEAM)
+ipl.data$`PLAYING ROLE`<-factor(ipl.data$`PLAYING ROLE`)
+ipl.data$`CAPTAINCY EXP`<-factor(ipl.data$`CAPTAINCY EXP`)
+levels(ipl.data$`CAPTAINCY EXP`)<-c(" -no", " -yes")
+```
+
+### Question 1
+We notice a statistical difference among the coefficents for the different age groups. However we do not see a trend between the age and selling price. Younger players are valued more, but the older players (age > 35yrs) are also valued more than the middle aged players(25-35 yrs).
+
+
+```{r}
+price.age.model <- lm(`SOLD PRICE` ~ AGE -1 , data=ipl.data) 
+summary(price.age.model)
+```
+
+### Question 2
+Here plot the relation between the 'Sold Price' and 'Strike Rate', 'Captaincy Experience' with interactions only for the batsman role players. 
+
+From the graph we notice that 'Strike Rate' and 'Captaincy Experience' are not statistically significant individually but their interaction however is significant. 
+
+
+```{r}
+##Question 2
+
+data.slice<-subset(ipl.data,`PLAYING ROLE`=="Batsman")
+model2<-lm(`SOLD PRICE`~`SR -B` + `CAPTAINCY EXP` + `SR -B`:`CAPTAINCY EXP`, data = data.slice)
+summary(model2)
+
+
+library(ggplot2)
+plot <- ggplot(data=ipl.data, aes(x=`SR -B`, y=`SOLD PRICE`, colour=factor(`CAPTAINCY EXP`)))
+plot + stat_smooth(method=lm, fullrange=FALSE) + geom_point()
+
+
+```
+
+
+### Question 3
+
+From our model summary we find that batting average is statistically significant on regressing with the player selling price.
+
+```{r}
+
+model3<-lm(`SOLD PRICE`~`AVE` , data = ipl.data)
+summary(model3)
+
+```
+
+
+### Quesetion 4
+
+The adjusted R- squared has increased from 15% to 20%. Hence we can conclude that the including 'SIXERS' has improved the model. How ever since 'SIXERS' and batting average are correlated, we find that the significance of the 'AVE' variable has decreased.
+
+
+```{r}
+
+model4<-lm(`SOLD PRICE`~`AVE`+`SIXERS` , data = ipl.data)
+summary(model4)
+
+```
+
+
+### Question 5
+
+## Variable Selection
+
+In order to select the appropriate variable we use all subsets regression where we test the models by taking all the variables and dropping the variables one by one (backward step). We then use the leaps package to plot only one best model in each scenario. 
+
+```{r}
+library(leaps)
+leaps<-regsubsets(`SOLD PRICE`~ `AGE`+  `PLAYING ROLE`+ `T-RUNS`+ `T-WKTS`+ `ODI-RUNS-S`+ `ODI-SR-B`+ `ODI-WKTS`+ `ODI-SR-BL`+ `CAPTAINCY EXP`+ `RUNS-S`+ `HS`+ `AVE`+ `SR -B`+ `SIXERS`+ `RUNS-C`+ `WKTS`+ `AVE-BL`+ `ECON`+ `SR-BL`+ `BASE PRICE`, data = ipl.data, nbest = 1)
+plot(leaps, scale="adjr2")
+
+```
+
+
+## Ideal Model
+
+From the above graph we find that the best model consists of the following variables : AGE, T-RUNS, ODI-RUNS, RUNS-S, HS, RUNS-C, BASE PRICE. Our ideal model explains 53% of the variance between the predicted and observed sellign prices.
+
+
+```{r}
+#Ideal Model
+
+ideal<-lm(`SOLD PRICE`~ `AGE`+  `T-RUNS`+ `ODI-RUNS-S`+ `RUNS-S`+`HS`+ `RUNS-C`+ `BASE PRICE`, data = ipl.data)
+summary(ideal)
+
+
+```
+
+## Mallow's Cp 
+We find use the formula and calculate it manually as follows. 
+
+```{r}
+#Full Model
+full.model<-lm(`SOLD PRICE`~ `AGE`+  `PLAYING ROLE`+ `T-RUNS`+ `T-WKTS`+ `ODI-RUNS-S`+ `ODI-SR-B`+ `ODI-WKTS`+ `ODI-SR-BL`+ `CAPTAINCY EXP`+ `RUNS-S`+ `HS`+ `AVE`+ `SR -B`+ `SIXERS`+ `RUNS-C`+ `WKTS`+ `AVE-BL`+`ECON`+ `SR-BL`+ `BASE PRICE`, data = ipl.data)
+#Manually calculating the Mallow's Cp 
+SSE<-sum(ideal$residuals**2) # for the ideal model
+MSE<-7.7746e+10  # Taken from the full.model annova table
+n<-nrow(ipl.data)
+p<-9; p#no. of parameters in our ideal model
+Cp<-(SSE/MSE)-(n-(2*p)); Cp
+
+```
+
+## Outliers
+
+We use the car package and influence plot to find the ourliers. 
+
+```{r}
+#To Find outliers in our model
+library(carData)
+library(car)
+influencePlot(ideal, id.method = "identify", main="Influence Plot", sub="Circle size is proportional to Cook's distance")
+#From the graph we identify the outliers 
+outlier.pts<-ipl.data[c(84,24,94,112,114),];outlier.pts
+```
+
+
+### Question 6
+
+## Part (a)
+Since we got around 53% R-square using full model - we believe that the data is sufficient to explain the variation in price of IPL players.
+
+## Part (b) 
+No. of matches played can be a good stat that could improve the model.
+Stats from frist class cricket.
+Stats of international T20 matches played by players.
+
+## Part (c)
+
+```{r}
+par(mfrow=c(2,2))
+plot(ideal)
+```
+
