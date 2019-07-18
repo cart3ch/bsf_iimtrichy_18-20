@@ -1,0 +1,173 @@
+---
+title: "Marriot Hotel Room Demand Forecasting"
+author: "Business Forecasting Group 2 - Team 10 :Paraskumar, Karthigeyan, Shanmuga Priya, Raju, Niranjan a.k.a GOD"
+date: "18/07/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Data Cleaning
+We First clean the data by converting the respective columns as factors and extract the data subset which will be used in the calculations.
+
+```{r}
+#### Data Cleaning
+library(readxl)
+marriot<-read_excel("Marriot_data (1).xlsx")
+marriot$`DOW INDICATOR1`<-factor(marriot$`DOW INDICATOR1`)
+DOW<-c("Saturday","Sunday","Monday","Tuesday","Wednesday","Thursday","Friday")
+levels(marriot$`DOW INDICATOR1`)<-DOW
+marriot$WEEK<-factor(marriot$WEEK)
+levels(marriot$WEEK)<-c("Week 1","Week 2","Week 3","Week 4","Week 5","Week 6","Week 7",
+                        "Week 8","Week 9","Week 10","Week 11","Week 12","Week 13","Week 14")
+marriot[,c(7,8,9,10,11)]<-NULL
+data.subset<-data.frame(Demand= marriot$DEMAND[1:87], Day = marriot$`DOW INDICATOR1`[1:87], Week = marriot$WEEK[1:87])
+str(data.subset)
+
+```
+
+# Exploratory Data Anlysis
+
+## Univariate Analysis
+Here we find the descriptive statistics of the hotel room demand.
+
+```{r}
+##Univariate Analysis
+summary(data.subset$Demand)
+```
+
+We are also interested in how the demand varies per day and per week. This is captured in the following plots.
+
+```{r}
+library(ggplot2)
+demand.day<-ggplot(data.subset,aes(x = data.subset$Day ,
+                                   y = data.subset$Demand,
+                                   fill=data.subset$Day))+geom_boxplot()
+demand.day+labs(title = "Demand Variation Across Weeks",
+                x="Day of Week", y="No. Of Rooms Demanded", 
+                fill="Days of the Week")+
+                theme(axis.text.x = element_blank(), plot.title = element_text(hjust = 0.5))
+
+demand.week<-ggplot(data.subset,aes(x = data.subset$Week,
+                                    y = data.subset$Demand,
+                                    fill=data.subset$Week))+geom_boxplot()
+demand.week+labs(title = "Demand Variation Across Weeks",
+                x="Week No.", y="No. Of Rooms Demanded", 
+                fill="Week No.")+
+                theme(axis.text.x = element_blank(),plot.title = element_text(hjust = 0.5))
+
+```
+
+## Time Series Plots
+
+We would like to visually inspect how the demand changes. 
+
+```{r}
+### Creating a time-series object
+library(ggplot2)
+library(forecast)
+demand.ts<-ts(data.subset$Demand,frequency = 7)
+autoplot(demand.ts, ylab = "Total no. of rooms demamded", xlab = "Week no.",
+         main ="Marriot Hotel Rooms Demanded : May 23 - Aug 18,1987 " )+
+         theme(plot.title = element_text(hjust = 0.5))
+
+ggsubseriesplot(demand.ts) +
+  ylab("No. Rooms Demanded") +
+  ggtitle("Hotel Room Demand Variation")+theme(plot.title = element_text(hjust = 0.5))
+
+ggseasonplot(demand.ts, year.labels=TRUE, year.labels.left=TRUE) +  ylab("No. of rooms demanded") +
+  ggtitle("Seasonal plot: Room Demand variation")+theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+Here we don't notice a trend but a seasonality. To further confirm we conduct the unit root test to identify if there are any random walks present.
+
+#Forcasting Procedure
+
+## Stationarity Check
+
+```{r}
+##Staionarity Tests
+library(fUnitRoots)
+adfTest(demand.ts) #  #p-value> 0.05 : Fail to reject null hypothesis = Non-stationarity
+library(tseries)
+kpss.test(demand.ts) #p-value> 0.05 : Fail to reject null hypothesis = Stationarity
+```
+
+The contradictory results from the above test further leads us to consider not just ARIMA models but also determinsitic trend-seasonality models.
+
+
+## Model Building
+
+### Naive
+The simplest model to be considered is the naive forcast.
+```{r}
+#Naive
+model.naive<-naive(demand.ts)
+model.naive
+checkresiduals(model.naive$residuals)
+```
+
+
+### ETS
+Next, we consider the Holt-winter model.
+```{r}
+##Trend-Seasonality Decompositions
+model.ets<-ets(demand.ts)
+model.ets
+plot(model.ets)
+checkresiduals(model.ets$residuals)
+model.ets$aic
+accuracy(model.ets)
+```
+
+### ARIMA
+Here, we consider ARIMA models.
+```{r}
+#Auto-ARIMA
+model.arima<-auto.arima(demand.ts)
+model.arima
+checkresiduals(model.arima$residuals)
+model.arima$aic
+```
+
+
+## Model Evaluation
+
+Here we plot our models.
+
+```{r}
+library(ggplot2)
+autoplot(demand.ts) +
+  autolayer(fitted(model.ets), series = "ETS") +
+  autolayer(fitted(model.arima), series = "Auto-ARIMA") +
+  autolayer(fitted(model.naive), series = "Naive")+
+  guides(colour = guide_legend(title = " "))
+```
+
+
+Now we compare the model AIC values and the MAPE for the three models.
+
+```{r}
+accuracy(model.naive)
+accuracy(model.arima)
+accuracy(model.ets)
+```
+
+By looking at the MAPE values we find the Holt-Winter model to give the best prediction.
+
+# Forecast Reccomendation 
+
+The last row of the output give the best estimate for Saturday (22 August 1987), the start of week 14. 
+
+```{r}
+m2<-forecast(model.ets, h=5);m2
+```
+
+# Suggestions To Improve Forecasting
+
+We can further imporve the forecasting by considering a longer time interval. 
+
+
