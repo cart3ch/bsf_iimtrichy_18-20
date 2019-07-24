@@ -1,0 +1,115 @@
+---
+title: "Assignment3 : Time Series"
+author: "Paras (1801035), Karthigeyan (1801093), Shanmuga Priya (1801115), Raju (1801166), Niranjan (Acad Sec #1)"
+date: "24/07/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+## Simulating an AR(1) process 
+Given $\phi_{0} = 100$ and $\phi_{1} = 0.8$ , we simulate simulate a random walk using the equation $$ Y_{t} = \phi_{0} + \phi_{1}Y_{t-1} + e_{t} $$ ,Where $e_{t}$ is the white noise component with $\mu=0$ and $\sigma = 1$ .
+
+# Part (a)
+Generating the simulation using the above equation.
+
+```{r warning= FALSE}
+# initialize seed for random numbers
+set.seed(999) 
+C<-100  
+phi_1<-0.8 
+y<-1:108 
+y[1]<-C/(1-phi_1); y[1]
+
+# Generating the random walk using equation
+for (i in 2:108 ) {y[i]<-(phi_1*y[i-1])+C+rnorm(1, mean = 0, sd = 1)}
+  
+#Ploting the random walk for first 100 values
+train<-ts(y[1:100],frequency = 1) # creating a training dataset from Y
+test<-ts(y[100:108],frequency = 1) # creating a test datatset from Y
+library(ggplot2)
+library(forecast)
+autoplot(train , ylab = "Y", xlab = "n", main ="AR(1) Process Illustration")
+```
+
+## Part (b)
+Generating an arima model using the first 100 values.
+```{r}
+## Estimating AR(1) Model
+model<-arima(train,order = c(1,0,0))
+prediction<-forecast(model,h=8)
+
+# Plotting the Predictions
+autoplot(prediction, ylab = "Y", xlab = "n", main ="AR(1) Prediction")
+```
+
+## Part (c)
+Comparing the predicted values with the observed values. We first calculate room mean square error. 
+```{r }
+#Comparing the preditions with the test data
+RMSE= sqrt(mean((prediction$mean-y[101:108])^2))
+#Root mean square error
+RMSE
+```
+
+
+# Question 2
+## ARIMA Model for WWWusage
+```{r}
+### Question 2 - Developing and ARIMA process using "Modeling Procedure"
+
+# We Start with the time series model
+autoplot(WWWusage, ylab = "No. of Users connected to the server", 
+         xlab = "Minutes", main ="World wide web usage")
+#Visual inspection does not give us any idea about stationarity
+#Next we try to confirm if the data is stationary or not using the ADF test
+
+##Staionarity Tests
+library(tseries)
+adf.test(WWWusage) 
+#p-value> 0.05 : Fail to reject null hypothesis = Non-stationarity
+##So the time series contains a random walk in it 
+
+
+#Taking first differences
+diff.series<-diff(WWWusage, lag = 1, differences = 1)
+autoplot(diff.series, ylab = "No. of Users connected to the server", 
+         xlab = "Minutes", main ="WWWusage first differencing")
+##Staionarity Tests
+adf.test(diff.series) 
+#p-value> 0.05 : Fail to reject null hypothesis = Non-stationarity
+
+#Taking second differences
+diff2.series<-diff(diff.series, lag = 1, differences = 1)
+autoplot(diff2.series, ylab = "No. of Users connected to the server", 
+         xlab = "Minutes", main ="WWWusage second differencing")
+##Staionarity Tests
+adf.test(diff2.series) 
+#p-value< 0.05 : Reject null hypothesis = Non-stationarity
+#Therefore the differencing parameter d=2
+
+# To find the value of p, we plot the PACF of diff2.series
+pacf(diff2.series)
+#From the graph we see that a lag of 2 is significantly greater than zero. Hence p=2
+
+# To find the value of q, we plot the ACF of diff2.series
+acf(diff2.series)
+#From the we see that a lag of 1 has a value significantly greater than zero
+
+# Thus our ARIMA (p,d,q) model is is ARIMA (2,2,1)
+fit1<-arima(WWWusage,order = c(2,2,1))
+fit1
+#The AIC score is 513.26
+fit2<-auto.arima(WWWusage)
+fit2
+# The AIC score is 514.3
+# ARIMA(2,2,1) has the lowest AIC value, hence we will select this model
+
+#Now we check the residuals of our chosen model
+checkresiduals(fit1$residuals)
+#Now the residuals look like white noise and the ACF values are almost zero.
+#Hence our models is correct.
+```

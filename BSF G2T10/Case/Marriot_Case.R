@@ -1,5 +1,5 @@
 #### Reading the data
-setwd("BSF G2T10/Case/")
+setwd("BSF G2T10/Case/") #<-----Set your working directory here 
 library(readxl)
 marriot<-read_excel("Marriot_data (1).xlsx")
 View(marriot)
