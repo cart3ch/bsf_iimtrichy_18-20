@@ -1,0 +1,32 @@
+---
+title: "Project Report : Predicting Win Probability in DoTA2 Using Logistic Regression"
+author: "Paraskumar, Karthigeyan, Shanmuga Priya, Raju, Niranjan"
+date: "03/08/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+train<-read.csv("dota2Train.csv")
+test<-read.csv("dota2Test.csv")
+
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
