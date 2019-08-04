@@ -8,5 +8,19 @@
 setwd("BSF G2T10/Project/")
 
 ### Data Cleaning
-train<-read.csv("dota2Train.csv")
-test<-read.csv("dota2Test.csv")
+#win.train<-read.csv("dota2Train_win.csv")
+win.test<-read.csv("dota2Test_win.csv")
+
+#lose.train<-read.csv("dota2Train_lose.csv")
+#lose.test<-read.csv("dota2Test_lose.csv")
+
+table(win.test$result)
+head(win.test,2)
+
+plot(table(win.test$result)
+table(Affairs$resp)
+
+
+m1.logit <- glm(data=win.test, result~., family=binomial)
+summary(m1.logit)
+exp(m1.logit$coefficients)

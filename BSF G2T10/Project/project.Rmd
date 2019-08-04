@@ -7,26 +7,23 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 library(ggplot2)
-train<-read.csv("dota2Train.csv")
-test<-read.csv("dota2Test.csv")
-
+win.test<-read.csv("dota2Test_win.csv")
 
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Introduction
+### Model
+We made a logistic regression where we find how choosing a particular characters affects your probability of winning
 
+#Logistic Regression Model
 
-```{r cars}
-summary(cars)
+```{r}
+m1.logit <- glm(data=win.test, result~., family=binomial)
+summary(m1.logit)
 ```
 
-## Including Plots
+# Exponential of Coefficients
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+exp(m1.logit$coefficients)
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

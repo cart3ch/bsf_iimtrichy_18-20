@@ -1,0 +1,29 @@
+---
+title: "Model"
+author: "Paraskumar, Karthigeyan, Shanmuga Priya, Raju, Niranjan"
+date: "03/08/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+win.test<-read.csv("dota2Test_win.csv")
+
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Model
+We made a logistic regression where we find how choosing a particular characters affects your probability of winning
+
+#Logistic Regression Model
+
+```{r}
+m1.logit <- glm(data=win.test, result~., family=binomial)
+summary(m1.logit)
+```
+
+# Exponential of Coefficients
+
+```{r}
+exp(m1.logit$coefficients)
+```
